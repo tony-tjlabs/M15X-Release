@@ -1,0 +1,92 @@
+{
+  "date_str": "20260217",
+  "total_records": 13,
+  "total_workers_access": 4,
+  "total_workers_move": 1,
+  "tward_holders": 0,
+  "companies": 2,
+  "spots": 3,
+  "day_workers": 4,
+  "night_workers": 0,
+  "missing_exit_workers": 0,
+  "night_supplement_records": 0,
+  "incomplete_night_workers": 0,
+  "time_start": "2026-02-17 06:55:00",
+  "time_end": "2026-02-17 22:49:00",
+  "journey_corrected": true,
+  "corrected_records": 0,
+  "correction_ratio": 0.0,
+  "workers_corrected": 0,
+  "unmapped_records": 0,
+  "unmapped_ratio": 0.0,
+  "gap_analysis_enabled": true,
+  "gap_stats": {
+    "total_gaps": 0,
+    "filled_gaps": 0,
+    "skipped_gaps": 0,
+    "filled_records": 0,
+    "avg_gap_min": 0.0,
+    "low_confidence_records": 0
+  },
+  "tokenization_enabled": true,
+  "tokenization_stats": {
+    "total_records": 13,
+    "block_type_distribution": {
+      "WORK": 10,
+      "TRANSIT": 2,
+      "GATE_IN": 1
+    },
+    "invalid_transition_count": 0,
+    "avg_block_duration": {
+      "GATE_IN": 1.0,
+      "TRANSIT": 1.0,
+      "WORK": 10.0
+    }
+  },
+  "validation_enabled": true,
+  "validation": {
+    "overall_score": 1.0,
+    "overall_level": "pass",
+    "checks": [
+      {
+        "check_name": "BLE 커버리지",
+        "level": "pass",
+        "metric": 1.0,
+        "threshold_pass": 0.7,
+        "threshold_warning": 0.5,
+        "message": "BLE 커버리지 양호 (100.0%)",
+        "avg_gap_ratio": 0.0,
+        "total_workers": 4,
+        "coverage_distribution": {
+          "정상 (>=70%)": 4,
+          "부분음영 (50-70%)": 0,
+          "음영 (30-50%)": 0,
+          "미측정 (<30%)": 0
+        }
+      },
+      {
+        "check_name": "Journey 연속성",
+        "level": "pass",
+        "metric": 1.0,
+        "threshold_pass": 0.05,
+        "threshold_warning": 0.15,
+        "message": "이동 기록 없음 (단일 위치 체류)",
+        "total_transitions": 0
+      },
+      {
+        "check_name": "출퇴근 일관성",
+        "level": "pass",
+        "metric": 2.75,
+        "threshold_pass": 10.0,
+        "threshold_warning": 30.0,
+        "message": "출퇴근 기록 일관성 양호 (평균 오차 2.8분)",
+        "avg_error_min": 2.75,
+        "median_error_min": 2.75,
+        "sample_count": 1
+      }
+    ],
+    "summary": "통과 3개"
+  },
+  "processed_at": "2026-04-11T15:55:00.498085",
+  "cache_version": "v1"
+}

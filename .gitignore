@@ -1,0 +1,49 @@
+# ─── DeepCon-M15X Release .gitignore ────────────────
+
+# ─── 보안: 절대 커밋 금지 ─────────────────────────
+.env
+*.env
+.env.*
+.streamlit/secrets.toml
+token.json
+client_secret.json
+service_account_key.json
+credentials*.json
+*.pem
+*.key
+
+# ─── Raw 데이터 (절대 포함 금지) ─────────────────
+data/raw/
+
+# ─── 불필요 캐시/모델 ────────────────────────────
+data/cache/
+data/model/
+data/deep_space/
+
+# ─── Python ──────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# ─── IDE / OS ────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+*.log
+
+# ─── 개발 전용 ───────────────────────────────────
+scripts/
+.artifacts/
+CLAUDE.md
+PROJECT_STATUS.md
+
+# ─── 임시 파일 ───────────────────────────────────
+*.tmp
+*.bak
+*~
+assets/fonts/AppleSDGothicNeo.ttc

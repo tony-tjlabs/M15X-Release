@@ -1,0 +1,12 @@
+locus_id,locus_name,locus_type,hazard_level,hazard_grade,confined_space,height_risk,minimum_crew,work_permit_required,dwell_category
+L-M15X-001,FAB 5F,WORK,medium,3.0,False,True,1,False,LONG_STAY
+L-M15X-002,FAB 6F,WORK,medium,3.0,False,True,1,False,LONG_STAY
+L-M15X-003,FAB 7F,WORK,medium,3.0,False,True,1,False,LONG_STAY
+L-M15X-004,FAB RF,WORK,medium,3.0,False,True,1,False,LONG_STAY
+L-M15X-005,FAB 건너 화장실,REST,low,2.0,False,False,1,False,SHORT_STAY
+L-M15X-006,FAB 건너 휴게실,REST,low,2.0,False,False,1,False,SHORT_STAY
+L-M15X-007,FAB 건너 흡연실,REST,low,2.0,False,False,1,False,SHORT_STAY
+L-M15X-008,공사현장,TRANSPORT,medium,3.0,False,False,1,False,TRANSIT
+L-M15X-009,타각기,GATE,low,2.0,False,False,1,False,TRANSIT
+L-M15X-010,호이스트2,TRANSPORT,high,4.0,False,True,2,True,TRANSIT
+L-M15X-011,호이스트3,TRANSPORT,high,4.0,False,True,2,True,TRANSIT

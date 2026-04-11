@@ -1,0 +1,100 @@
+{
+  "date_str": "20260313",
+  "total_records": 630119,
+  "total_workers_access": 4673,
+  "total_workers_move": 1547,
+  "tward_holders": 456,
+  "companies": 45,
+  "spots": 11,
+  "day_workers": 4287,
+  "night_workers": 386,
+  "missing_exit_workers": 28,
+  "night_supplement_records": 0,
+  "incomplete_night_workers": 0,
+  "time_start": "2026-03-13 00:00:00",
+  "time_end": "2026-03-13 23:59:00",
+  "journey_corrected": true,
+  "corrected_records": 12340,
+  "correction_ratio": 1.96,
+  "workers_corrected": 1308,
+  "unmapped_records": 241,
+  "unmapped_ratio": 0.02,
+  "gap_analysis_enabled": true,
+  "gap_stats": {
+    "total_gaps": 0,
+    "filled_gaps": 0,
+    "skipped_gaps": 0,
+    "filled_records": 0,
+    "avg_gap_min": 0.0,
+    "low_confidence_records": 0
+  },
+  "tokenization_enabled": true,
+  "tokenization_stats": {
+    "total_records": 1124501,
+    "block_type_distribution": {
+      "WORK": 1070313,
+      "TRANSIT": 39588,
+      "REST": 11265,
+      "GATE_OUT": 1290,
+      "GATE_IN": 1102,
+      "UNKNOWN": 943
+    },
+    "invalid_transition_count": 1048457,
+    "avg_block_duration": {
+      "GATE_IN": 1.7575757575757576,
+      "GATE_OUT": 2.3800738007380073,
+      "REST": 6.433466590519703,
+      "TRANSIT": 1.9595109637182597,
+      "UNKNOWN": 30.419354838709676,
+      "WORK": 40.02516734602296
+    }
+  },
+  "validation_enabled": true,
+  "validation": {
+    "overall_score": 0.33,
+    "overall_level": "fail",
+    "checks": [
+      {
+        "check_name": "BLE 커버리지",
+        "level": "pass",
+        "metric": 0.9582,
+        "threshold_pass": 0.7,
+        "threshold_warning": 0.5,
+        "message": "BLE 커버리지 양호 (95.8%)",
+        "avg_gap_ratio": 0.0418,
+        "total_workers": 1571,
+        "coverage_distribution": {
+          "정상 (>=70%)": 1469,
+          "부분음영 (50-70%)": 19,
+          "음영 (30-50%)": 64,
+          "미측정 (<30%)": 19
+        }
+      },
+      {
+        "check_name": "Journey 연속성",
+        "level": "fail",
+        "metric": 0.0,
+        "threshold_pass": 0.95,
+        "threshold_warning": 0.85,
+        "message": "Journey 연속성 부족 (비정상 100.0%) — 데이터 품질 점검 필요",
+        "total_transitions": 48324,
+        "invalid_transitions": 48324,
+        "invalid_ratio": 1.0
+      },
+      {
+        "check_name": "출퇴근 일관성",
+        "level": "fail",
+        "metric": 80.9639,
+        "threshold_pass": 10.0,
+        "threshold_warning": 30.0,
+        "message": "출퇴근 기록 불일치 (평균 오차 81.0분) — 데이터 점검 필요",
+        "avg_error_min": 80.96,
+        "median_error_min": 2.02,
+        "sample_count": 1506
+      }
+    ],
+    "summary": "통과 1개 / 실패 2개"
+  },
+  "processed_at": "2026-04-11T16:15:58.107610",
+  "cache_version": "v1"
+}

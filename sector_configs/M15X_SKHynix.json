@@ -1,0 +1,51 @@
+{
+  "_comment": "M15X FAB 건설현장 Sector 설정",
+  "sector_id": "M15X_SKHynix",
+  "sector_name": "SK하이닉스 M15X 건설현장",
+  "sector_type": "construction_site",
+
+  "domain": {
+    "primary": "construction",
+    "active_packs": ["construction"]
+  },
+
+  "data": {
+    "raw_dir": "data/raw/M15X_SKHynix",
+    "processed_dir": "data/processed/M15X_SKHynix",
+    "spatial_model_dir": "data/spatial_model/M15X_SKHynix",
+    "cache_dir": "data/cache/M15X_SKHynix"
+  },
+
+  "ingestion": {
+    "parser": "construction.TwardParser",
+    "raw_format": "tward_v1",
+    "time_resolution_sec": 60,
+    "entity_type": "PERSON_FIXED",
+    "nfc_normalize": true
+  },
+
+  "spatial": {
+    "coordinate_origin": "top_left",
+    "use_spatial_model": true,
+    "buildings": ["FAB"],
+    "levels": ["5F", "6F", "7F", "RF"]
+  },
+
+  "metrics": {
+    "core": ["dc", "ast"],
+    "from_packs": {
+      "construction": ["ewi", "cre", "sii", "shift_detection"]
+    },
+    "ewi_high_threshold": 0.6,
+    "ewi_low_threshold": 0.2,
+    "cre_high_risk": 0.6,
+    "cre_caution": 0.3,
+    "work_hours": {"start": "07:00", "end": "19:00"}
+  },
+
+  "model": {
+    "core_vocab": "data/shared/vocabulary/core_tokens.json",
+    "pack_vocabs": ["domain_packs/construction/tokens.json"],
+    "core_weights": "data/shared/model_weights/deep_space_latest.pt"
+  }
+}

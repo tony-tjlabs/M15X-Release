@@ -1,0 +1,17 @@
+# DeepCon-M15X — Streamlit Cloud Deploy
+streamlit>=1.32.0
+pandas>=2.0.0
+numpy>=1.26.0
+plotly>=5.18.0
+pyarrow>=14.0.0
+fpdf2>=2.7.0
+kaleido>=0.2.1
+matplotlib>=3.8.0
+openpyxl>=3.1.0
+anthropic>=0.18.0,<1.0.0
+python-dotenv>=1.0.0
+scikit-learn>=1.3.0
+networkx>=3.0
+PyYAML>=6.0
+pydantic>=2.0.0
+Pillow>=10.0.0
