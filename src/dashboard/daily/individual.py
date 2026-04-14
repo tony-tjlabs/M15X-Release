@@ -261,6 +261,7 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
                 "점심 외부 (LMT)": wrow.get("lmt_minutes", 0) if pd.notna(wrow.get("lmt_minutes")) else 0,
                 "이동 중 (감지)": wrow.get("in_transit_min", 0),
                 "호이스트/출입": wrow.get("transit_min", 0),
+                "미분류 구역": wrow.get("unknown_min", 0),
                 "BLE 미감지": wrow.get("shadow_min", 0),
             }
             act_colors = {
@@ -271,6 +272,7 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
                 "점심 외부 (LMT)": "#A78BFA",
                 "이동 중 (감지)": "#FF8C42",
                 "호이스트/출입": "#9AB5D4",
+                "미분류 구역": "#7A5FA6",
                 "BLE 미감지": "#5A6A7A",
             }
         else:
@@ -332,11 +334,14 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
             "smoking_area": "휴게공간",
             "dining_hall":  "휴게공간",
             "shadow_zone":  "BLE미감지",
+            "unknown":      "미분류 구역",
+            "unmapped":     "미분류 구역",
         }
         sp_colors = {
             "FAB 작업구역": "#00AEEF", "이동구간": "#9AB5D4",
             "휴게공간": "#00C897", "밀폐공간": "#FF6B35",
             "고압전구역": "#FF4C4C", "BLE미감지": "#5A6A7A",
+            "미분류 구역": "#7A5FA6",
         }
 
         # Journey 데이터에서 직접 계산 (분 단위 deduplicate → 정확한 비율)
