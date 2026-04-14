@@ -309,30 +309,75 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
             st.plotly_chart(fig, use_container_width=True)
             if has_ewi_v2:
                 st.caption(
-                    "집중 작업: FAB 내 고활성(ar≥0.60) | 경작업: FAB 내 저활성 | "
+                    "집중 작업: FAB 내 고활성(ar≥0.90) | 경작업: FAB 내 저활성 | "
                     "이동 중: 5분 내 3회+ 장소 변경 감지 | "
                     "점심 외부: 타각기 통과 확인된 외부 체류 | "
-                    "BLE 미감지: 30분+ 센서 음영"
+                    "BLE 미감지: 30분+ 센서 음영 ※야간 근무자는 D+1 새벽 기록이 누락될 수 있음"
                 )
         else:
             st.caption("활동 데이터 없음")
 
     with col_space:
         st.markdown(sub_header("pin 공간 체류"), unsafe_allow_html=True)
-        space_data = {
-            "작업구역": wrow.get("work_zone_minutes", 0),
-            "휴게공간": wrow.get("rest_minutes", 0),
-            "밀폐공간": wrow.get("confined_minutes", 0),
-            "고압전구역": wrow.get("high_voltage_minutes", 0),
+
+        # locus_token → 표시 카테고리 매핑
+        # outdoor_work = FAB 외부 이동 통로 (작업 공간 아님)
+        _TOKEN_TO_SPACE = {
+            "work_zone":    "FAB 작업구역",
+            "outdoor_work": "이동구간",
+            "transit":      "이동구간",
+            "timeclock":    "이동구간",
+            "breakroom":    "휴게공간",
+            "restroom":     "휴게공간",
+            "smoking_area": "휴게공간",
+            "dining_hall":  "휴게공간",
+            "shadow_zone":  "BLE미감지",
         }
+        sp_colors = {
+            "FAB 작업구역": "#00AEEF", "이동구간": "#9AB5D4",
+            "휴게공간": "#00C897", "밀폐공간": "#FF6B35",
+            "고압전구역": "#FF4C4C", "BLE미감지": "#5A6A7A",
+        }
+
+        # Journey 데이터에서 직접 계산 (분 단위 deduplicate → 정확한 비율)
+        space_data: dict = {}
+        _user_no_sp = wrow.get("user_no")
+        _jdf_sp = st.session_state.get("current_journey_df")
+        if _user_no_sp and _jdf_sp is not None and not _jdf_sp.empty:
+            uj = _jdf_sp[_jdf_sp["user_no"] == _user_no_sp]
+            if not uj.empty and "locus_token" in uj.columns:
+                # 같은 분에 복수 S-Ward 감지 시 신호 강도 최대 위치 우선
+                sc = "signal_count" if "signal_count" in uj.columns else None
+                uj_dedup = (
+                    uj.sort_values(sc, ascending=False) if sc else uj
+                ).drop_duplicates(subset=["timestamp"])
+                for token, cnt in uj_dedup["locus_token"].value_counts().items():
+                    label = _TOKEN_TO_SPACE.get(str(token))
+                    if label:
+                        space_data[label] = space_data.get(label, 0) + int(cnt)
+                # 밀폐/고압전은 locus_id 기반이라 pre-computed 값 보완
+                for extra_key, extra_col in [("밀폐공간", "confined_minutes"), ("고압전구역", "high_voltage_minutes")]:
+                    v = wrow.get(extra_col, 0)
+                    if v and v > 0 and extra_key not in space_data:
+                        space_data[extra_key] = v
+
+        # Fallback: pre-aggregated columns
+        if not space_data:
+            space_data = {
+                "FAB 작업구역": wrow.get("work_zone_minutes", 0),
+                "이동구간":     wrow.get("outdoor_minutes", 0),
+                "휴게공간":     wrow.get("rest_minutes", 0),
+                "밀폐공간":     wrow.get("confined_minutes", 0),
+                "고압전구역":   wrow.get("high_voltage_minutes", 0),
+                "BLE미감지":    wrow.get("shadow_minutes", 0),
+            }
+
         space_data = {k: v for k, v in space_data.items() if v > 0}
         if space_data:
-            sp_colors = {"작업구역": "#00AEEF", "휴게공간": "#00C897",
-                         "밀폐공간": "#FF6B35", "고압전구역": "#FF4C4C"}
             fig = go.Figure(go.Pie(
                 labels=list(space_data.keys()),
                 values=list(space_data.values()),
-                marker_colors=[sp_colors.get(k, "#666") for k in space_data.keys()],
+                marker_colors=[sp_colors.get(k, "#888") for k in space_data.keys()],
                 hole=0.45,
                 textinfo="label+percent",
                 textfont=dict(size=11),
@@ -395,7 +440,14 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
         st.markdown(path_display)
         if len(path) > 25:
             st.caption(f"(+{len(path)-25}개 추가 이동)")
-        st.caption(f"총 {len(tokens)}분 기록 | {wrow.get('transition_count', 0)}회 이동")
+        _ble_min  = int(wrow.get("recorded_minutes", 0))
+        _work_min = wrow.get("work_minutes", 0)
+        _blocks   = len(tokens)
+        st.caption(
+            f"위치 블록 {_blocks}개 | "
+            f"BLE 기록 {_ble_min}분 / 근무 {_work_min:.0f}분 | "
+            f"{wrow.get('transition_count', 0)}회 이동"
+        )
 
     # ── Journey 기반 시간대별 분석 + 맥락 분석 ────────────────────────
     _user_journey = None

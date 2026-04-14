@@ -1,6 +1,6 @@
 {
   "date_str": "20260301",
-  "total_records": 346330,
+  "total_records": 346466,
   "total_workers_access": 115,
   "total_workers_move": 13,
   "tward_holders": 1,
@@ -9,14 +9,14 @@
   "day_workers": 110,
   "night_workers": 5,
   "missing_exit_workers": 0,
-  "night_supplement_records": 0,
+  "night_supplement_records": 136,
   "incomplete_night_workers": 0,
   "time_start": "2026-03-01 00:00:00",
-  "time_end": "2026-03-01 23:59:00",
+  "time_end": "2026-03-02 06:43:00",
   "journey_corrected": true,
-  "corrected_records": 330,
+  "corrected_records": 333,
   "correction_ratio": 0.1,
-  "workers_corrected": 9,
+  "workers_corrected": 10,
   "unmapped_records": 29,
   "unmapped_ratio": 0.01,
   "gap_analysis_enabled": true,
@@ -30,21 +30,21 @@
   },
   "tokenization_enabled": true,
   "tokenization_stats": {
-    "total_records": 363702,
+    "total_records": 364320,
     "block_type_distribution": {
-      "WORK": 358619,
+      "WORK": 359224,
       "GATE_IN": 2054,
-      "TRANSIT": 1722,
-      "GATE_OUT": 1278,
+      "TRANSIT": 1734,
+      "GATE_OUT": 1279,
       "UNKNOWN": 29
     },
-    "invalid_transition_count": 23443,
+    "invalid_transition_count": 24061,
     "avg_block_duration": {
       "GATE_IN": 128.375,
-      "GATE_OUT": 142.0,
-      "TRANSIT": 10.62962962962963,
+      "GATE_OUT": 127.9,
+      "TRANSIT": 10.2603550295858,
       "UNKNOWN": 14.5,
-      "WORK": 652.0345454545454
+      "WORK": 640.3279857397505
     }
   },
   "validation_enabled": true,
@@ -55,17 +55,17 @@
       {
         "check_name": "BLE 커버리지",
         "level": "pass",
-        "metric": 0.9968,
+        "metric": 1.0,
         "threshold_pass": 0.7,
         "threshold_warning": 0.5,
-        "message": "BLE 커버리지 양호 (99.7%)",
-        "avg_gap_ratio": 0.0032,
+        "message": "BLE 커버리지 양호 (100.0%)",
+        "avg_gap_ratio": 0.0,
         "total_workers": 277,
         "coverage_distribution": {
-          "정상 (>=70%)": 276,
+          "정상 (>=70%)": 277,
           "부분음영 (50-70%)": 0,
           "음영 (30-50%)": 0,
-          "미측정 (<30%)": 1
+          "미측정 (<30%)": 0
         }
       },
       {
@@ -75,8 +75,8 @@
         "threshold_pass": 0.95,
         "threshold_warning": 0.85,
         "message": "Journey 연속성 부족 (비정상 100.0%) — 데이터 품질 점검 필요",
-        "total_transitions": 462,
-        "invalid_transitions": 462,
+        "total_transitions": 481,
+        "invalid_transitions": 481,
         "invalid_ratio": 1.0
       },
       {
@@ -93,6 +93,6 @@
     ],
     "summary": "통과 2개 / 실패 1개"
   },
-  "processed_at": "2026-04-14T15:49:25.377209",
+  "processed_at": "2026-04-14T17:35:19.641517",
   "cache_version": "v1"
 }

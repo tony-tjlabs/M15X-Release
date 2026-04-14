@@ -1,6 +1,6 @@
 {
   "date_str": "20260312",
-  "total_records": 665441,
+  "total_records": 679287,
   "total_workers_access": 4705,
   "total_workers_move": 1566,
   "tward_holders": 469,
@@ -9,15 +9,15 @@
   "day_workers": 4301,
   "night_workers": 404,
   "missing_exit_workers": 38,
-  "night_supplement_records": 0,
+  "night_supplement_records": 13846,
   "incomplete_night_workers": 0,
   "time_start": "2026-03-12 00:00:00",
-  "time_end": "2026-03-12 23:59:00",
+  "time_end": "2026-03-13 06:03:00",
   "journey_corrected": true,
-  "corrected_records": 11633,
-  "correction_ratio": 1.75,
-  "workers_corrected": 1322,
-  "unmapped_records": 311,
+  "corrected_records": 12046,
+  "correction_ratio": 1.77,
+  "workers_corrected": 1327,
+  "unmapped_records": 314,
   "unmapped_ratio": 0.03,
   "gap_analysis_enabled": true,
   "gap_stats": {
@@ -30,23 +30,23 @@
   },
   "tokenization_enabled": true,
   "tokenization_stats": {
-    "total_records": 1173531,
+    "total_records": 1197697,
     "block_type_distribution": {
-      "WORK": 1112487,
-      "TRANSIT": 41932,
-      "REST": 13348,
-      "UNKNOWN": 3395,
-      "GATE_OUT": 1341,
+      "WORK": 1135210,
+      "TRANSIT": 42920,
+      "REST": 13834,
+      "UNKNOWN": 3465,
+      "GATE_OUT": 1240,
       "GATE_IN": 1028
     },
-    "invalid_transition_count": 1097978,
+    "invalid_transition_count": 1121783,
     "avg_block_duration": {
       "GATE_IN": 1.6607431340872374,
-      "GATE_OUT": 2.2767402376910018,
-      "REST": 6.930425752855659,
-      "TRANSIT": 1.97727165558542,
-      "UNKNOWN": 91.75675675675676,
-      "WORK": 40.67594149908592
+      "GATE_OUT": 2.1160409556313993,
+      "REST": 6.990399191510864,
+      "TRANSIT": 1.9938678807024064,
+      "UNKNOWN": 91.1842105263158,
+      "WORK": 40.6681235222469
     }
   },
   "validation_enabled": true,
@@ -57,17 +57,17 @@
       {
         "check_name": "BLE 커버리지",
         "level": "pass",
-        "metric": 0.9675,
+        "metric": 0.9925,
         "threshold_pass": 0.7,
         "threshold_warning": 0.5,
-        "message": "BLE 커버리지 양호 (96.7%)",
-        "avg_gap_ratio": 0.0325,
+        "message": "BLE 커버리지 양호 (99.3%)",
+        "avg_gap_ratio": 0.0075,
         "total_workers": 1598,
         "coverage_distribution": {
-          "정상 (>=70%)": 1517,
+          "정상 (>=70%)": 1584,
           "부분음영 (50-70%)": 6,
-          "음영 (30-50%)": 67,
-          "미측정 (<30%)": 8
+          "음영 (30-50%)": 7,
+          "미측정 (<30%)": 1
         }
       },
       {
@@ -77,8 +77,8 @@
         "threshold_pass": 0.95,
         "threshold_warning": 0.85,
         "message": "Journey 연속성 부족 (비정상 100.0%) — 데이터 품질 점검 필요",
-        "total_transitions": 50130,
-        "invalid_transitions": 50130,
+        "total_transitions": 51064,
+        "invalid_transitions": 51064,
         "invalid_ratio": 1.0
       },
       {
@@ -95,6 +95,6 @@
     ],
     "summary": "통과 1개 / 실패 2개"
   },
-  "processed_at": "2026-04-14T16:03:10.967656",
+  "processed_at": "2026-04-14T17:56:15.529710",
   "cache_version": "v1"
 }

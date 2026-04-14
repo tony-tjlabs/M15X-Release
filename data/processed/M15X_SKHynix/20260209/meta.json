@@ -1,6 +1,6 @@
 {
   "date_str": "20260209",
-  "total_records": 40425,
+  "total_records": 42448,
   "total_workers_access": 6025,
   "total_workers_move": 174,
   "tward_holders": 543,
@@ -9,15 +9,15 @@
   "day_workers": 5229,
   "night_workers": 796,
   "missing_exit_workers": 5,
-  "night_supplement_records": 0,
+  "night_supplement_records": 2023,
   "incomplete_night_workers": 0,
   "time_start": "2026-02-09 03:59:00",
-  "time_end": "2026-02-09 23:59:00",
+  "time_end": "2026-02-10 06:24:00",
   "journey_corrected": true,
-  "corrected_records": 693,
-  "correction_ratio": 1.71,
-  "workers_corrected": 138,
-  "unmapped_records": 26,
+  "corrected_records": 714,
+  "correction_ratio": 1.68,
+  "workers_corrected": 140,
+  "unmapped_records": 27,
   "unmapped_ratio": 0.03,
   "gap_analysis_enabled": true,
   "gap_stats": {
@@ -30,23 +30,23 @@
   },
   "tokenization_enabled": true,
   "tokenization_stats": {
-    "total_records": 88280,
+    "total_records": 92123,
     "block_type_distribution": {
-      "WORK": 84653,
-      "TRANSIT": 2934,
+      "WORK": 88419,
+      "TRANSIT": 3015,
       "GATE_IN": 253,
-      "REST": 225,
-      "GATE_OUT": 188,
+      "REST": 230,
+      "GATE_OUT": 179,
       "UNKNOWN": 27
     },
-    "invalid_transition_count": 87491,
+    "invalid_transition_count": 91334,
     "avg_block_duration": {
       "GATE_IN": 2.1083333333333334,
-      "GATE_OUT": 2.211764705882353,
-      "REST": 7.5,
-      "TRANSIT": 2.038915913829048,
+      "GATE_OUT": 2.2098765432098766,
+      "REST": 7.419354838709677,
+      "TRANSIT": 2.023489932885906,
       "UNKNOWN": 5.4,
-      "WORK": 36.83768494342907
+      "WORK": 36.871976647206004
     }
   },
   "validation_enabled": true,
@@ -57,16 +57,16 @@
       {
         "check_name": "BLE 커버리지",
         "level": "pass",
-        "metric": 0.9513,
+        "metric": 0.988,
         "threshold_pass": 0.7,
         "threshold_warning": 0.5,
-        "message": "BLE 커버리지 양호 (95.1%)",
-        "avg_gap_ratio": 0.0487,
+        "message": "BLE 커버리지 양호 (98.8%)",
+        "avg_gap_ratio": 0.012,
         "total_workers": 182,
         "coverage_distribution": {
-          "정상 (>=70%)": 168,
+          "정상 (>=70%)": 180,
           "부분음영 (50-70%)": 0,
-          "음영 (30-50%)": 12,
+          "음영 (30-50%)": 0,
           "미측정 (<30%)": 2
         }
       },
@@ -77,8 +77,8 @@
         "threshold_pass": 0.95,
         "threshold_warning": 0.85,
         "message": "Journey 연속성 부족 (비정상 100.0%) — 데이터 품질 점검 필요",
-        "total_transitions": 3795,
-        "invalid_transitions": 3795,
+        "total_transitions": 3943,
+        "invalid_transitions": 3943,
         "invalid_ratio": 1.0
       },
       {
@@ -95,6 +95,6 @@
     ],
     "summary": "통과 1개 / 주의 1개 / 실패 1개"
   },
-  "processed_at": "2026-04-14T15:31:25.303959",
+  "processed_at": "2026-04-14T17:15:59.174064",
   "cache_version": "v1"
 }
