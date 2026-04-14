@@ -345,6 +345,9 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
         _jdf_sp = st.session_state.get("current_journey_df")
         if _user_no_sp and _jdf_sp is not None and not _jdf_sp.empty:
             uj = _jdf_sp[_jdf_sp["user_no"] == _user_no_sp]
+            # 근무시간 내 데이터만 사용 (출근 전·퇴근 후 BLE 제외)
+            if "is_work_hour" in uj.columns:
+                uj = uj[uj["is_work_hour"]]
             if not uj.empty and "locus_token" in uj.columns:
                 # 같은 분에 복수 S-Ward 감지 시 신호 강도 최대 위치 우선
                 sc = "signal_count" if "signal_count" in uj.columns else None
@@ -473,6 +476,11 @@ def _render_journey_analysis(journey_df, wrow, locus_dict):
     jj = journey_df.copy()
     if not pd.api.types.is_datetime64_any_dtype(jj["timestamp"]):
         jj["timestamp"] = pd.to_datetime(jj["timestamp"])
+    # 근무시간 외 데이터 제외 (출근 전·퇴근 후 BLE 기록이 타임라인에 표시되지 않도록)
+    if "is_work_hour" in jj.columns:
+        jj = jj[jj["is_work_hour"]]
+    if jj.empty:
+        return
     jj["_hour"] = jj["timestamp"].dt.hour
 
     # 시간대별 집계: 토큰별 분 수 + 평균 활성비율
