@@ -577,8 +577,18 @@ def _calc_lmt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     last_work_before = work_in_lunch["timestamp"].max()
 
     # ── [조건 2] 현장 전체 BLE 무신호 구간 탐지 ──────────────────────
-    # last_work_before 이후의 전체 레코드로 무신호 Gap 계산
-    after_work = df_window[df_window["timestamp"] > last_work_before].sort_values("timestamp")
+    # ★ shadow_zone(보정 기록)을 제외하고 실제 센서 감지 레코드만 사용
+    #   shadow_zone은 BLE 미감지 구간을 파이프라인이 채운 값이므로
+    #   외부 이탈 감지 시 간섭을 일으킴 → is_imputed=False OR non-shadow 토큰만
+    REAL_TOKENS = WORK_ZONE_TOKENS | GATE_TOKENS | {
+        "breakroom", "restroom", "smoking_area",
+        "outdoor_work", "transit",
+    }
+    after_work_all = df_window[df_window["timestamp"] > last_work_before]
+    after_work = after_work_all[
+        after_work_all["locus_token"].isin(REAL_TOKENS)
+    ].sort_values("timestamp")
+
     if after_work.empty:
         return None
 
@@ -586,7 +596,7 @@ def _calc_lmt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     if len(all_times) < 2:
         return None
 
-    # 연속 감지 사이의 간격 = BLE 무신호 구간
+    # 연속 실제-감지 사이의 간격 = BLE 무신호 구간 (= 건물 밖 가능성)
     gaps = []
     for i in range(len(all_times) - 1):
         gap_start = all_times[i]
@@ -598,8 +608,11 @@ def _calc_lmt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     if not gaps:
         return None  # 유의미한 BLE 공백 없음 → 현장 내 이탈 없음
 
-    # ── [조건 3] 무신호 구간이 타각기 통과로 포장되었는가 ──────────────
-    GATE_WINDOW_MIN = 7  # 타각기 감지와 무신호 시작/끝 사이 허용 시간차(분)
+    # ── [조건 3] 퇴장 타각기 통과 확인 ─────────────────────────────────
+    # ★ M15X 현장 특성: 복귀 시 타각기가 재감지되지 않는 경우 많음
+    #   → 퇴장 측(gap_start 직전) 타각기 확인만 필수,
+    #     재입장 측(gap_end 직후)은 work_zone 복귀(조건 4)로 대체
+    GATE_WINDOW_MIN = 10  # 타각기 ↔ 무신호 시작 허용 시간차 (분, 여유 확보)
 
     gate_times = set(
         df_window[df_window["locus_token"].isin(GATE_TOKENS)]["timestamp"].tolist()
@@ -614,14 +627,13 @@ def _calc_lmt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
 
     valid_lmt = None
     for gap_start, gap_end, gap_min in gaps:
-        if gap_min > 120:
-            continue  # 2시간 초과 = 비현실적
+        if gap_min > 150:
+            continue  # 2.5시간 초과 = 비현실적 (점심시간 최대 여유 반영)
 
-        # 조건 3: 무신호 시작 직전에 타각기 감지(퇴장), 종료 직후에 타각기 감지(재입장)
-        gate_exit_confirmed   = has_gate_near(gap_start)
-        gate_entry_confirmed  = has_gate_near(gap_end)
+        # 조건 3: 퇴장 타각기 확인 (재입장은 work_zone 복귀로 대체)
+        gate_exit_confirmed = has_gate_near(gap_start)
 
-        if not (gate_exit_confirmed and gate_entry_confirmed):
+        if not gate_exit_confirmed:
             continue  # 타각기 통과 없이 사라진 것 → 단순 BLE 음영
 
         # ── [조건 4] 무신호 이후 work_zone 복귀 확인 ──────────────
