@@ -323,12 +323,14 @@ def _render_risk_reason_section(worker_df: pd.DataFrame) -> None:
     )
 
     # 표시 컬럼 선택 (존재하는 것만)
-    base_cols = ["user_name", "ewi", "cre", "sii"]
+    # user_no(고유 식별자) 우선 노출 → 동명이인 구분 가능
+    base_cols = ["user_no", "user_name", "ewi", "cre", "sii"]
     display_cols = [c for c in base_cols if c in risk_df.columns]
     display_cols.append("위험 원인")
 
     rename_map = {
-        "user_name": "작업자번호",
+        "user_no": "ID",
+        "user_name": "작업자",
         "ewi": "EWI",
         "cre": "CRE",
         "sii": "SII",

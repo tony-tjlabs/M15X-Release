@@ -537,10 +537,7 @@ def _render_coverage_transparency(df: pd.DataFrame) -> None:
     투명성 패널: 이 수치는 어떻게 계산되었나?
     Coverage ratio, threshold, 보정 방법, 집계 기준 명시.
     """
-    try:
-        from src.pipeline.journey_reconstructor import DEFAULT_COVERAGE_THRESHOLD
-    except ImportError:
-        DEFAULT_COVERAGE_THRESHOLD = 0.30  # 30% 최소 신뢰 기준
+    from src.pipeline.journey_reconstructor import DEFAULT_COVERAGE_THRESHOLD
 
     has_coverage = "coverage_pct" in df.columns and df["coverage_pct"].notna().any()
     has_excluded = "is_coverage_excluded" in df.columns

@@ -46,9 +46,12 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
 
     df = worker_df.copy()
     if search:
+        # user_no(고유 식별자) + user_name + company_name 모두 검색 대상
+        # user_name은 마스킹되어 동명이인 발생 → 정확 식별을 위해 user_no 필수
         mask = (
-            df["user_name"].str.contains(search, case=False, na=False)
-            | df["company_name"].str.contains(search, case=False, na=False)
+            df["user_name"].astype(str).str.contains(search, case=False, na=False)
+            | df["company_name"].astype(str).str.contains(search, case=False, na=False)
+            | df["user_no"].astype(str).str.contains(search, case=False, na=False)
         )
         df = df[mask]
 
@@ -86,8 +89,8 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
         cov_icons = {"정상": "green", "부분음영": "yellow", "음영": "orange", "미측정": "red"}
         df["BLE"] = df["ble_coverage"].map(cov_icons).fillna("?")
 
-    # 표시 컬럼 구성
-    base_cols = ["shift", "user_name", "company_name", "work_minutes",
+    # 표시 컬럼 구성 (user_no는 동명이인 식별을 위한 고유 ID)
+    base_cols = ["shift", "user_no", "user_name", "company_name", "work_minutes",
                  "valid_ble_minutes", "recorded_minutes",
                  "unique_loci", "transition_count", "confined_minutes", "high_voltage_minutes"]
     if "ble_coverage" in df.columns:
@@ -102,7 +105,7 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
 
     show_cols = [c for c in base_cols + metric_cols if c in df.columns]
     rename = {
-        "shift": "교대", "user_name": "작업자", "company_name": "업체",
+        "shift": "교대", "user_no": "ID", "user_name": "작업자", "company_name": "업체",
         "work_minutes": "근무(분)", "valid_ble_minutes": "유효BLE(분)",
         "recorded_minutes": "전체BLE(분)",
         "unique_loci": "방문구역", "transition_count": "이동횟수",
@@ -124,16 +127,29 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
     )
 
     # 개별 작업자 상세 보기 (그래픽 포함)
+    # 식별자: user_no (고유) — user_name은 마스킹되어 동명이인 발생
     st.divider()
     st.markdown(section_header("작업자 상세 분석"), unsafe_allow_html=True)
-    worker_options = df["user_name"].head(50).tolist()
-    if not worker_options:
+    df_top = df.head(50).reset_index(drop=True)
+    user_no_options = df_top["user_no"].tolist()
+    if not user_no_options:
         return
-    masked_options = [mask_name(n) for n in worker_options]
-    selected_idx = st.selectbox("작업자 선택", range(len(worker_options)),
-                                format_func=lambda i: masked_options[i])
-    selected_worker = worker_options[selected_idx]
-    wrow = df[df["user_name"] == selected_worker].iloc[0]
+
+    def _format_worker(i: int) -> str:
+        row = df_top.iloc[i]
+        name = mask_name(str(row.get("user_name", "-")))
+        company = str(row.get("company_name", "-"))
+        uno = row["user_no"]
+        return f"{name} | {company} | #{uno}"
+
+    selected_idx = st.selectbox(
+        "작업자 선택 (user_no 기준 고유 식별)",
+        range(len(user_no_options)),
+        format_func=_format_worker,
+    )
+    selected_user_no = user_no_options[selected_idx]
+    wrow = df_top[df_top["user_no"] == selected_user_no].iloc[0]
+    selected_worker = wrow["user_name"]
 
     # 프로필 헤더
     in_t = str(wrow.get("in_datetime", ""))[:16] if pd.notna(wrow.get("in_datetime")) else "-"
@@ -149,6 +165,8 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
         f"<div>"
         f"<span style='font-size:1.3rem; font-weight:700; color:#D5E5FF;'>"
         f"{shift_icon} {mask_name(selected_worker)}</span>"
+        f"<span style='color:#7A8FA8; font-size:0.78rem; margin-left:8px; font-family:monospace;'>"
+        f"#{wrow.get('user_no', '-')}</span>"
         f"<span style='color:#9AB5D4; font-size:0.88rem; margin-left:12px;'>"
         f"{wrow.get('company_name', '-')}</span>"
         f"</div>"
@@ -174,6 +192,56 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
             f"EWI/CRE 지표를 신뢰할 수 없습니다. "
             f"T-Ward 미착용, 센서 음영, 또는 장비 고장 가능성이 있습니다."
             f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ── U1: BLE 데이터 없음 가드 ─────────────────────────────────
+    # recorded_minutes=0 이면서 work_minutes>0 → 근무는 했지만 BLE 미수신
+    _rec_min = int(wrow.get("recorded_minutes", 0) or 0)
+    if _rec_min == 0 and wm > 0:
+        st.markdown(
+            "<div style='background:#1A1015; border:1px solid #FF4C4C44; "
+            "border-left:4px solid #FF4C4C; border-radius:8px; "
+            "padding:10px 16px; margin-bottom:12px; font-size:0.85rem; color:#D5E5FF;'>"
+            "🚫 <b>BLE 데이터 없음</b> | "
+            f"근무 {wm:.0f}분 동안 T-Ward 신호가 단 한 번도 수신되지 않았습니다. "
+            "EWI/CRE/활동 분배/이동 경로 등 모든 BLE 기반 지표는 의미가 없습니다. "
+            "T-Ward 미착용 또는 장비 고장이 의심됩니다."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ── U2: shadow_min > 50% 신뢰도 경고 ─────────────────────────
+    _shadow_min = float(wrow.get("shadow_min", 0) or 0)
+    if wm > 0 and _shadow_min > 0:
+        _shadow_ratio = _shadow_min / wm
+        if _shadow_ratio > 0.5:
+            st.markdown(
+                "<div style='background:#1A1510; border:1px solid #FF8C4244; "
+                "border-left:4px solid #FF8C42; border-radius:8px; "
+                "padding:10px 16px; margin-bottom:12px; font-size:0.85rem; color:#D5E5FF;'>"
+                "📡 <b>BLE 음영 비율 높음 — 신뢰도 낮음</b> | "
+                f"근무 {wm:.0f}분 중 {_shadow_min:.0f}분({_shadow_ratio*100:.0f}%)이 30분+ 음영 구간으로 분류되었습니다. "
+                "이 작업자의 활동 분배·동선·EWI 지표는 참고용으로만 활용하세요."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+    # ── 100% 고활성 anomaly 경고 (T-Ward 활성 모드 고착 의심) ─────
+    # 조건: intense_work_min / recorded_work_min ≥ 99% & 근무 4시간+ & 휴식 0
+    _intense = float(wrow.get("intense_work_min", 0) or 0)
+    _rec_work = float(wrow.get("recorded_work_min", _rec_min) or _rec_min)
+    _rest = float(wrow.get("rest_min", 0) or 0)
+    if _rec_work > 0 and _intense / _rec_work >= 0.99 and wm > 240 and _rest == 0:
+        st.markdown(
+            "<div style='background:#1A1510; border:1px solid #FFB30044; "
+            "border-left:4px solid #FFB300; border-radius:8px; "
+            "padding:10px 16px; margin-bottom:12px; font-size:0.85rem; color:#D5E5FF;'>"
+            "⚡ <b>비현실적 100% 고활성 패턴</b> | "
+            f"근무 {wm:.0f}분 중 {_intense:.0f}분({_intense/_rec_work*100:.0f}%)이 모두 고활성(ar≥0.90), 휴식 0분. "
+            "T-Ward가 활성 모드에 고착되었거나(센서 이상), 진동 발생 장비에 부착되었을 가능성이 있습니다. "
+            "EWI 지표를 신중히 해석하세요."
+            "</div>",
             unsafe_allow_html=True,
         )
 
@@ -260,7 +328,7 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
                 "휴식 (휴게/흡연)": wrow.get("rest_min", 0),
                 "점심 외부 (LMT)": wrow.get("lmt_minutes", 0) if pd.notna(wrow.get("lmt_minutes")) else 0,
                 "이동 중 (감지)": wrow.get("in_transit_min", 0),
-                "호이스트/출입": wrow.get("transit_min", 0),
+                "외부·통로 이동": wrow.get("transit_min", 0),
                 "미분류 구역": wrow.get("unknown_min", 0),
                 "BLE 미감지": wrow.get("shadow_min", 0),
             }
@@ -271,7 +339,7 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
                 "휴식 (휴게/흡연)": "#00C897",
                 "점심 외부 (LMT)": "#A78BFA",
                 "이동 중 (감지)": "#FF8C42",
-                "호이스트/출입": "#9AB5D4",
+                "외부·통로 이동": "#9AB5D4",
                 "미분류 구역": "#7A5FA6",
                 "BLE 미감지": "#5A6A7A",
             }
@@ -310,8 +378,24 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
             )
             st.plotly_chart(fig, use_container_width=True)
             if has_ewi_v2:
+                # 활동 합계 vs 근무시간 정합성 표시
+                _act_sum = sum(activity_data.values())
+                _work_min_v = float(wrow.get("work_minutes", 0) or 0)
+                if _work_min_v > 0:
+                    _ratio = _act_sum / _work_min_v
+                    if 0.90 <= _ratio <= 1.10:
+                        _badge = f"<span style='color:#00C897'>✓ 활동 합 {_act_sum:.0f}분 / 근무 {_work_min_v:.0f}분 ({_ratio*100:.0f}%)</span>"
+                    elif 0.70 <= _ratio < 0.90 or 1.10 < _ratio <= 1.30:
+                        _badge = f"<span style='color:#FFB300'>△ 활동 합 {_act_sum:.0f}분 / 근무 {_work_min_v:.0f}분 ({_ratio*100:.0f}%)</span>"
+                    else:
+                        _badge = f"<span style='color:#FF6B35'>⚠ 활동 합 {_act_sum:.0f}분 / 근무 {_work_min_v:.0f}분 ({_ratio*100:.0f}%) — 정합성 낮음</span>"
+                    st.markdown(
+                        f"<div style='font-size:0.78rem; color:#9AB5D4; margin-top:-6px; margin-bottom:6px;'>{_badge}</div>",
+                        unsafe_allow_html=True,
+                    )
                 st.caption(
                     "집중 작업: FAB 내 고활성(ar≥0.90) | 경작업: FAB 내 저활성 | "
+                    "외부·통로 이동: 타각기·호이스트·공사현장(outdoor_work) 통과 | "
                     "이동 중: 5분 내 3회+ 장소 변경 감지 | "
                     "점심 외부: 타각기 통과 확인된 외부 체류 | "
                     "BLE 미감지: 30분+ 센서 음영 ※야간 근무자는 D+1 새벽 기록이 누락될 수 있음"
@@ -363,11 +447,15 @@ def render_individual(worker_df, locus_dict, has_ewi, has_cre):
                     label = _TOKEN_TO_SPACE.get(str(token))
                     if label:
                         space_data[label] = space_data.get(label, 0) + int(cnt)
-                # 밀폐/고압전은 locus_id 기반이라 pre-computed 값 보완
+                # 밀폐/고압전: locus_id 기반 → 동일 row가 work_zone에도 포함되므로
+                # FAB 작업구역에서 차감 후 별도 카테고리로 추가 (이중계상 방지)
                 for extra_key, extra_col in [("밀폐공간", "confined_minutes"), ("고압전구역", "high_voltage_minutes")]:
-                    v = wrow.get(extra_col, 0)
-                    if v and v > 0 and extra_key not in space_data:
-                        space_data[extra_key] = v
+                    v = int(wrow.get(extra_col, 0) or 0)
+                    if v > 0:
+                        # FAB 작업구역에서 차감
+                        if "FAB 작업구역" in space_data:
+                            space_data["FAB 작업구역"] = max(0, space_data["FAB 작업구역"] - v)
+                        space_data[extra_key] = space_data.get(extra_key, 0) + v
 
         # Fallback: pre-aggregated columns
         if not space_data:

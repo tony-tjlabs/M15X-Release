@@ -95,7 +95,7 @@ def _find_korean_font() -> str | None:
 
 # ─── PDF Wrapper ──────────────────────────────────────────────────────
 
-class _DeepCon-M15XPDF:
+class _DeepConM15XPDF:
     """Thin wrapper around fpdf2 with font, footer, and page-break helpers."""
 
     def __init__(self, report_type: str = "executive"):
@@ -183,7 +183,7 @@ def _safe_multi_cell(pdf, h: float, text: str, **kwargs):
     pdf.multi_cell(w, h, text, **kwargs)
 
 
-def _section_title(report: _DeepCon-M15XPDF, title: str, min_space: float = 55):
+def _section_title(report: _DeepConM15XPDF, title: str, min_space: float = 55):
     """Section title with accent underline. Ensures title + content stay together."""
     report.ensure_space(min_space)
     pdf = report.pdf
@@ -322,7 +322,7 @@ def _caption_text(pdf, font: str, text: str):
     pdf.ln(2)
 
 
-def _embed_chart(report: _DeepCon-M15XPDF, chart_bytes: bytes, w: float = 140):
+def _embed_chart(report: _DeepConM15XPDF, chart_bytes: bytes, w: float = 140):
     """Insert PNG bytes — centered on page."""
     if not chart_bytes:
         return
@@ -334,7 +334,7 @@ def _embed_chart(report: _DeepCon-M15XPDF, chart_bytes: bytes, w: float = 140):
 
 
 def _draw_table(
-    report: _DeepCon-M15XPDF,
+    report: _DeepConM15XPDF,
     headers: list[str],
     widths: list[float],
     rows: list[list[str]],
@@ -484,7 +484,7 @@ def generate_report(
     Returns:
         PDF 바이트
     """
-    report = _DeepCon-M15XPDF(report_type)
+    report = _DeepConM15XPDF(report_type)
 
     # v6: ReportContext 생성
     report_ctx = None
@@ -533,7 +533,7 @@ def generate_report(
 
 # ─── Page builders ───────────────────────────────────────────────────
 
-def _add_cover(report: _DeepCon-M15XPDF, date_range: str, sector_label: str, kpi: dict):
+def _add_cover(report: _DeepConM15XPDF, date_range: str, sector_label: str, kpi: dict):
     """Premium branded cover page."""
     pdf = report.pdf
     report.add_page(skip_footer=True)
@@ -670,7 +670,7 @@ def _add_cover(report: _DeepCon-M15XPDF, date_range: str, sector_label: str, kpi
 
 
 def _add_kpi_page(
-    report: _DeepCon-M15XPDF, kpi: dict, worker_stats: dict | None,
+    report: _DeepConM15XPDF, kpi: dict, worker_stats: dict | None,
     worker_df: pd.DataFrame | None,
 ):
     """KPI table + BLE coverage + Weather."""
@@ -793,7 +793,7 @@ def _add_kpi_page(
 
 
 def _add_trend_page(
-    report: _DeepCon-M15XPDF, kpi: dict,
+    report: _DeepConM15XPDF, kpi: dict,
     worker_df: pd.DataFrame | None,
     metas: list[dict], dates: list[str],
     report_ctx=None,
@@ -868,7 +868,7 @@ def _add_trend_page(
 
 
 def _add_risk_analysis_page(
-    report: _DeepCon-M15XPDF,
+    report: _DeepConM15XPDF,
     worker_df: pd.DataFrame | None,
     kpi: dict,
     worker_stats: dict | None,
@@ -977,7 +977,7 @@ def _add_risk_analysis_page(
 
 
 def _add_company_analysis_page(
-    report: _DeepCon-M15XPDF,
+    report: _DeepConM15XPDF,
     worker_df: pd.DataFrame,
     company_data: pd.DataFrame | None,
     report_ctx=None,
@@ -1064,7 +1064,7 @@ def _add_company_analysis_page(
                     f"Possible causes: missing check-in records or temporary workers.")
 
 
-def _add_insights_page(report: _DeepCon-M15XPDF, insights: InsightReport):
+def _add_insights_page(report: _DeepConM15XPDF, insights: InsightReport):
     """Data-driven insight cards with severity indicators."""
     pdf = report.pdf
     report.add_page()
@@ -1129,7 +1129,7 @@ def _add_insights_page(report: _DeepCon-M15XPDF, insights: InsightReport):
         pdf.ln(4)
 
 
-def _add_narrative_page(report: _DeepCon-M15XPDF, narrative: str):
+def _add_narrative_page(report: _DeepConM15XPDF, narrative: str):
     """AI briefing narrative — full text, no truncation."""
     pdf = report.pdf
     report.add_page()
@@ -1164,7 +1164,7 @@ def _add_narrative_page(report: _DeepCon-M15XPDF, narrative: str):
     pdf.ln(2)
 
 
-def _add_trend_table_page(report: _DeepCon-M15XPDF, trend_data: list[dict]):
+def _add_trend_table_page(report: _DeepConM15XPDF, trend_data: list[dict]):
     """Daily detail table (detailed only)."""
     report.add_page()
 

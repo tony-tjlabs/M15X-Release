@@ -326,7 +326,9 @@ def calc_basic_metrics(journey_df: pd.DataFrame, access_df: pd.DataFrame) -> pd.
 
     # ── Locus 시퀀스 (token dedup) — 작업자별 ─────────────────────
     # 정렬된 상태에서 shift 비교로 dedup
-    df_sorted = df.sort_values(["user_no", "timestamp"])
+    # 근무시간(is_work_hour=True) 데이터만 사용 → 타임라인/블록 카운트와 정합
+    _seq_src = df[df["is_work_hour"]] if "is_work_hour" in df.columns else df
+    df_sorted = _seq_src.sort_values(["user_no", "timestamp"])
     df_sorted["_prev_token"] = df_sorted.groupby("user_no")["locus_token"].shift(1)
     df_sorted["_token_changed"] = df_sorted["locus_token"] != df_sorted["_prev_token"]
     df_sorted.loc[df_sorted.groupby("user_no").head(1).index, "_token_changed"] = True

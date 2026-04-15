@@ -278,41 +278,9 @@ def _get_anonymizer():
     return st.session_state[cache_key]
 
 
-def _call_claude_anon(
-    prompt: str,
-    max_tokens: int = 1024,
-    *,
-    worker_names: Sequence[str] | None = None,
-    company_names: Sequence[str] | None = None,
-    zone_names: Sequence[str] | None = None,
-) -> str:
-    """
-    익명화 래퍼가 적용된 Claude 호출.
-
-    1) prompt 내 이름 마스킹 → 2) LLM 호출 → 3) 응답 복원
-    ANONYMIZE_LLM=false 이면 그대로 호출.
-    """
-    cfg = _load_config()
-
-    if cfg["anonymize"] and (worker_names or company_names or zone_names):
-        anon = _get_anonymizer()
-        masked_prompt = anon.mask(
-            prompt,
-            worker_names=worker_names,
-            company_names=company_names,
-            zone_names=zone_names,
-        )
-        logger.debug(
-            "Anonymizer: %d names masked in prompt (%d chars)",
-            len(anon.get_mapping()),
-            len(masked_prompt),
-        )
-        response = _call_claude(masked_prompt, max_tokens)
-        if response and not response.startswith("["):
-            return anon.unmask(response)
-        return response
-
-    return _call_claude(prompt, max_tokens)
+# NOTE: _call_claude_anon() removed (2026-04-15) — dead code with security risk.
+# 호출처 0건 확인됨. 향후 LLM 호출은 src/intelligence/llm_gateway.py + AnonymizationPipeline 사용.
+# (worker_names=[]로 호출 시 마스킹 스킵되는 함정 제거)
 
 
 # ─── 1. 일별 데이터 요약 (해석 보조) ─────────────────────────────────
@@ -457,57 +425,10 @@ def cached_insight_narrative(
     return _call_claude(prompt, max_tokens=800)
 
 
-# ─── 5. 작업자 분석 (build_worker_prompt 연동) ────────────────────────
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def cached_worker_analysis(
-    sector_id: str,
-    worker_id: str,
-    ewi: float,
-    cre: float,
-    work_minutes: int,
-    top_locus_ids: list[str] | None = None,
-) -> str:
-    """
-    개별 작업자 분석 생성.
-
-    domain_packs/construction/prompts.py의 build_worker_prompt를 사용하고,
-    DataGuard를 통해 민감 정보를 필터링한다.
-
-    Args:
-        sector_id: Sector 식별자
-        worker_id: 작업자 식별자 (익명화됨, 예: "작업자_A")
-        ewi: 작업강도 지표
-        cre: 위험노출 지표
-        work_minutes: 근무 시간 (분)
-        top_locus_ids: 주요 방문 공간 ID 목록
-
-    Returns:
-        LLM 분석 결과 문자열
-    """
-    # 작업자 지표 문자열 구성 (이미 익명화된 ID 사용)
-    metrics_parts = [
-        f"- 작업자: {worker_id}",
-        f"- 작업강도(EWI): {ewi:.3f}",
-        f"- 위험노출(CRE): {cre:.3f}",
-        f"- 근무시간: {work_minutes}분 ({work_minutes // 60}시간 {work_minutes % 60}분)",
-    ]
-
-    # Locus 컨텍스트 추가 (있는 경우)
-    if top_locus_ids:
-        locus_context = _get_locus_context_for_llm(sector_id, top_locus_ids, max_loci=5)
-        if locus_context:
-            metrics_parts.append(f"\n주요 방문 공간:\n{locus_context}")
-
-    worker_metrics = "\n".join(metrics_parts)
-
-    # prompts.py 템플릿 사용
-    prompt = domain_build_worker_prompt(worker_metrics)
-
-    # 추가 규칙 (기존 보안 제약 유지)
-    prompt += "\n\n규칙:\n- 2문장으로 간결하게 요약\n- 개인 식별 정보는 언급하지 마세요\n- 원인 분석이나 조치 권고는 하지 마세요\n- 한국어, 간결체"
-
-    return _call_claude(prompt, max_tokens=400)
+# ─── 5. 작업자 분석 (cached_worker_analysis) ─────────────────────────
+# REMOVED (2026-04-15): 호출처 0건. worker_id를 프롬프트에 직접 삽입하여
+# 향후 마스킹 안 된 user_name이 worker_id로 전달될 위험. 필요 시
+# src/intelligence/llm_gateway.py + AnonymizationPipeline 통한 새 구현 사용.
 
 
 # ─── (삭제됨) cached_high_risk_analysis ──────────────────────────────

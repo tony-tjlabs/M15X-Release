@@ -202,11 +202,13 @@ def _build_kpi(metas, worker_df, selected_dates, has_ewi, has_cre):
         kpi["weekday_days"] = len(wd_access)
         kpi["weekend_days"] = len(we_access)
 
+        # user_no는 유일한 고유 식별자. user_name은 마스킹되어 동명이인 합쳐짐 →
+        # nunique fallback 사용 시 인원수 과소 집계 유발. 따라서 fallback 제거.
         if "user_no" in worker_df.columns:
             kpi["unique_workers"] = int(worker_df["user_no"].nunique())
-        elif "user_name" in worker_df.columns:
-            kpi["unique_workers"] = int(worker_df["user_name"].nunique())
         else:
+            import logging as _lg
+            _lg.getLogger(__name__).error("worker_df에 user_no 컬럼 없음 — unique_workers=0")
             kpi["unique_workers"] = 0
 
         kpi["total_access"] = kpi["cum_access"]
