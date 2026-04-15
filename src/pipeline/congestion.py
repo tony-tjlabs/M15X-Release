@@ -230,10 +230,20 @@ def compute_multi_day_congestion(
 
     rows = []
     for date_str in date_list:
-        journey_path = _date_dir(date_str, sector_id) / "journey.parquet"
-        if not journey_path.exists():
-            continue
         try:
+            # ★ hourly.parquet 우선 (journey.parquet 없이도 Cloud 동작)
+            hourly_path = _date_dir(date_str, sector_id) / "hourly.parquet"
+            if hourly_path.exists():
+                hourly = pd.read_parquet(hourly_path)
+                if not hourly.empty:
+                    hourly["date"] = date_str
+                    rows.append(hourly)
+                continue
+
+            # 폴백: journey.parquet 실시간 계산
+            journey_path = _date_dir(date_str, sector_id) / "journey.parquet"
+            if not journey_path.exists():
+                continue
             jdf = pd.read_parquet(journey_path, columns=["timestamp", "user_no", "locus_id", "locus_token"])
             hourly = compute_hourly_profile(jdf, locus_dict)
             if not hourly.empty:

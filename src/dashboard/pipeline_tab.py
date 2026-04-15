@@ -9,9 +9,12 @@ Pipeline Tab — 데이터 파이프라인 관리 탭
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 import config as cfg
 from src.dashboard.styles import badge, metric_card, section_header
@@ -22,7 +25,7 @@ from src.pipeline.cache_manager import (
 )
 from src.pipeline.loader import load_daily_data
 from src.pipeline.processor import process_daily
-from src.spatial.loader import load_spot_name_map
+from src.spatial.loader import load_spot_name_map, load_locus_dict
 
 # Drive 모듈 (삭제된 경우 stub)
 try:
@@ -45,6 +48,7 @@ def render_pipeline_tab(sector_id: str | None = None):
     sid      = sector_id or cfg.SECTOR_ID
     paths    = cfg.get_sector_paths(sid)
     raw_dir  = paths["raw_dir"]
+    locus_dict = load_locus_dict(sid)
 
     st.markdown(section_header("📡 데이터 파이프라인"), unsafe_allow_html=True)
 
@@ -311,7 +315,18 @@ def _run_pipeline(
             # 3. stats를 meta에 병합 (journey 보정 통계)
             meta.update(results.pop("stats", {}))
 
-            # 4. 저장
+            # 4. 혼잡도 사전 계산 (journey.parquet 없이도 Cloud에서 사용 가능하도록)
+            try:
+                from src.pipeline.congestion import compute_congestion, compute_hourly_profile
+                jdf = results.get("journey")
+                if jdf is not None and not jdf.empty:
+                    cols = [c for c in ["timestamp", "user_no", "locus_id", "locus_token"] if c in jdf.columns]
+                    results["congestion"] = compute_congestion(jdf[cols], time_bin_minutes=30, locus_dict=locus_dict)
+                    results["hourly"]     = compute_hourly_profile(jdf[cols], locus_dict)
+            except Exception as _e:
+                logger.warning(f"혼잡도 사전 계산 실패 ({date_fmt}): {_e}")
+
+            # 5. 저장
             save_daily_results(results, meta, date_str, sector_id)
             _log(
                 f"💾 [{date_fmt}] 저장 완료 → "

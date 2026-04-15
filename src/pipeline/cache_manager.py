@@ -149,7 +149,8 @@ def save_daily_results(
 
     compression = "zstd" if use_zstd else "snappy"
 
-    for name in ["journey", "worker", "space", "company", "transit", "bp_transit"]:
+    for name in ["journey", "worker", "space", "company", "transit", "bp_transit",
+                 "congestion", "hourly"]:
         df = results.get(name)
         if df is not None and not df.empty:
             if downcast:
@@ -274,6 +275,36 @@ def load_journey(
         except Exception:
             pass  # 스키마 읽기 실패 시 전체 로드
     return pd.read_parquet(p)
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_congestion(
+    date_str: str,
+    sector_id: str | None = None,
+) -> pd.DataFrame:
+    """혼잡도 사전 계산 파일 로드 (congestion.parquet — journey 불필요)."""
+    p = _date_dir(date_str, sector_id) / "congestion.parquet"
+    if not p.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_parquet(p)
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_hourly(
+    date_str: str,
+    sector_id: str | None = None,
+) -> pd.DataFrame:
+    """시간대별 혼잡도 사전 계산 파일 로드 (hourly.parquet — journey 불필요)."""
+    p = _date_dir(date_str, sector_id) / "hourly.parquet"
+    if not p.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_parquet(p)
+    except Exception:
+        return pd.DataFrame()
 
 
 @st.cache_data(ttl=300, show_spinner=False)

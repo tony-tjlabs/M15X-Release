@@ -23,7 +23,10 @@ import config as cfg
 from src.dashboard.styles import (
     metric_card, section_header, PLOTLY_DARK, PLOTLY_LEGEND,
 )
-from src.pipeline.cache_manager import detect_processed_dates, _date_dir, load_journey
+from src.pipeline.cache_manager import (
+    detect_processed_dates, _date_dir, load_journey,
+    load_congestion, load_hourly,
+)
 from src.spatial.loader import load_locus_dict
 from src.dashboard.components import DWELL_CATEGORY_STYLES
 from src.utils.weather import date_label
@@ -122,22 +125,30 @@ def _render_single_day(sid: str, processed: list[str], locus_dict: dict):
     selected_label = st.selectbox("분석 날짜", list(date_options.keys()), key="cong_date")
     date_str = date_options[selected_label]
 
-    # journey 로드 (★ 캐시 활용 — 2회차부터 즉시 로드)
-    journey_full = load_journey(date_str, sid)
-    if journey_full.empty:
-        st.warning("journey.parquet가 없습니다. 로컬 환경에서 파이프라인을 실행하세요.")
-        return
+    from src.pipeline.congestion import (
+        compute_congestion, compute_hourly_profile,
+        compute_congestion_summary, compute_space_ranking,
+    )
 
-    with st.spinner("혼잡도 데이터 분석 중..."):
-        cols = [c for c in ["timestamp", "user_no", "locus_id", "locus_token"] if c in journey_full.columns]
-        journey_df = journey_full[cols]
-        from src.pipeline.congestion import (
-            compute_congestion, compute_hourly_profile,
-            compute_congestion_summary, compute_space_ranking,
-        )
-        congestion_df = compute_congestion(journey_df, time_bin_minutes=30, locus_dict=locus_dict)
-        hourly_df = compute_hourly_profile(journey_df, locus_dict)
-        summary = compute_congestion_summary(congestion_df)
+    # ★ 사전 계산 캐시 우선 (congestion.parquet / hourly.parquet)
+    # → journey.parquet 없이도 Cloud 배포에서 동작
+    congestion_df = load_congestion(date_str, sid)
+    hourly_df     = load_hourly(date_str, sid)
+
+    if congestion_df.empty:
+        # 폴백: journey.parquet 실시간 계산
+        journey_full = load_journey(date_str, sid)
+        if journey_full.empty:
+            st.warning("혼잡도 데이터가 없습니다. 파이프라인을 재실행하면 자동 생성됩니다.")
+            return
+        with st.spinner("혼잡도 데이터 분석 중..."):
+            cols = [c for c in ["timestamp", "user_no", "locus_id", "locus_token"] if c in journey_full.columns]
+            journey_df    = journey_full[cols]
+            congestion_df = compute_congestion(journey_df, time_bin_minutes=30, locus_dict=locus_dict)
+            hourly_df     = compute_hourly_profile(journey_df, locus_dict)
+
+    with st.spinner("혼잡도 집계 중..."):
+        summary    = compute_congestion_summary(congestion_df)
         ranking_df = compute_space_ranking(congestion_df, top_n=15)
 
     if congestion_df.empty:
