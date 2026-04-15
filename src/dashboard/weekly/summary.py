@@ -338,7 +338,7 @@ def render_ewi_cre_trend(
         st.markdown("""
 | 지표 | 의미 | 범위 | 고위험 기준 |
 |------|------|------|------------|
-| **EWI** | Effective Work Intensity | 0~1 | >= 0.6 |
+| **EWI** | Effective Work Intensity | 0~1 | >= 0.52 |
 | **CRE** | Combined Risk Exposure | 0~1 | >= 0.6 |
 | **SII** | Site Intensity-Risk Index | 0~1 | >= 0.5 |
 

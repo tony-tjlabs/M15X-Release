@@ -36,15 +36,17 @@ $$EWI = \\frac{고활성 \\times 1.0 + 저활성 \\times 0.5 + 대기 \\times 0.
 
 | 구분 | 기준 | 가중치 |
 |------|------|--------|
-| 고활성 (High Active) | active_ratio >= 0.60 | 1.0 |
-| 저활성 (Low Active) | 0.15 <= active_ratio < 0.60 | 0.5 |
-| 대기 (Standby) | active_ratio < 0.15 | 0.2 |
+| 고활성 (High Active) | active_ratio >= **0.90** | 1.0 |
+| 저활성 (Low Active) | **0.40** <= active_ratio < 0.90 | 0.5 |
+| 대기 (Standby) | active_ratio < **0.40** | 0.2 |
 | 휴식/이동 | 비작업 공간 | 0 |
 
 **active_ratio**: BLE T-Ward의 활성 신호수 / 전체 신호수
+T-Ward는 활성 시 10초, 비활성 시 1분 발신 → 이진 분포 특성상 0.90/0.40 임계값 사용
 (1에 가까울수록 활발한 신체 이동, 0에 가까울수록 정지 상태)
 
-**EWI 등급**: 고강도(>=0.6) | 보통(0.2~0.6) | 저강도(<0.2)
+**EWI 등급**: 고강도(>=0.52) | 보통(0.29~0.52) | 저강도(<0.29)
+※ M15X 33일 17,469건 실측 기반 P33/P66 사분위 기준
 **음영 신뢰도**: BLE 미수집 구간(gap) > 20% 이면 기록 분 기준으로 계산
         """)
 
@@ -63,10 +65,10 @@ $$EWI = \\frac{고활성 \\times 1.0 + 저활성 \\times 0.5 + 대기 \\times 0.
             title="EWI 분포 (전체 작업자)",
             labels={"ewi": "EWI", "count": "작업자 수"},
         )
-        fig.add_vline(x=0.6, line_dash="dash", line_color="#FF4C4C",
-                      annotation_text="고강도 기준", annotation_font_color="#FF4C4C")
-        fig.add_vline(x=0.2, line_dash="dash", line_color="#F5A623",
-                      annotation_text="보통 기준", annotation_font_color="#F5A623")
+        fig.add_vline(x=0.52, line_dash="dash", line_color="#FF4C4C",
+                      annotation_text="고강도 기준(0.52)", annotation_font_color="#FF4C4C")
+        fig.add_vline(x=0.29, line_dash="dash", line_color="#F5A623",
+                      annotation_text="보통 기준(0.29)", annotation_font_color="#F5A623")
         fig.update_layout(**_DARK, height=320)
         st.plotly_chart(fig, use_container_width=True)
 
