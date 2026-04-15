@@ -487,12 +487,12 @@ def _render_all_route_segments(df: pd.DataFrame) -> None:
         ),
         y_label="점심 외출",
         total_col="seg_lbt_out_total",
-        metric_col="seg_lbt_out_total",  # 편도 기준 (LBT-In 포함 안 함)
+        metric_col="lbt_out_minutes",   # lbt_minutes와 동일 집단 — out + in = lbt_minutes 보장
     )
 
     # 3. 점심 복귀 (LBT-In): 타각기 -> 야외 -> 호이스트 -> FAB
-    # metric_col = seg_lbt_in_total (편도만): 타각기 이전 현장 외부는 BLE 추적 불가
-    # 경로 미추적 = LBT-In KPI 중 3개 구간으로 설명되지 않는 부분
+    # metric_col = lbt_in_minutes: lbt_minutes와 동일 집단·동일 방식으로 계산된 In 편도
+    # → avg(lbt_out_minutes) + avg(lbt_in_minutes) = avg(lbt_minutes) (동일 집단)
     _render_route_segment_chart(
         df,
         seg_cols=["seg_lbt_in_gate_to_outdoor", "seg_lbt_in_outdoor_to_hoist", "seg_lbt_in_hoist_to_fab"],
@@ -507,7 +507,7 @@ def _render_all_route_segments(df: pd.DataFrame) -> None:
         ),
         y_label="점심 복귀",
         total_col="seg_lbt_in_total",
-        metric_col="seg_lbt_in_total",  # 편도 기준 (LBT-Out 포함 안 함)
+        metric_col="lbt_in_minutes",    # lbt_minutes와 동일 집단 — out + in = lbt_minutes 보장
     )
 
     # 4. 퇴근 (EOD): FAB -> 호이스트 -> 야외 -> 타각기

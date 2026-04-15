@@ -642,7 +642,7 @@ def _calc_lmt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     return round(valid_lmt, 1)
 
 
-def _calc_lbt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
+def _calc_lbt_for_worker(df: pd.DataFrame, cfg_values: dict) -> dict | None:
     """
     LBT (Lunch Break Transit) 계산 - 단일 작업자용.
 
@@ -651,10 +651,11 @@ def _calc_lbt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     - LBT-In:  타각기 마지막 감지 → 첫 work_zone 복귀 (타각기 출발 ~ FAB 복귀)
     - LBT = LBT-Out + LBT-In (왕복 이동 총합)
 
-    Note: 편도(LBT-Out만)가 아닌 왕복 합계 — 현장까지 이동하는 실제 총 시간
+    Note: out/in 컴포넌트를 분리 저장하여 lbt_out_minutes + lbt_in_minutes = lbt_minutes
+          가 동일 집단 기준으로 항상 성립하도록 보장.
 
     Returns:
-        LBT (분) 또는 None (중식 이동 없음)
+        {"total": float, "out": float, "in": float | None} 또는 None (중식 이동 없음)
     """
     lunch_start = cfg_values["lunch_start"]
     lunch_end = cfg_values["lunch_end"]
@@ -694,10 +695,10 @@ def _calc_lbt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
         (df["timestamp"] <= _lbt_in_search_limit)
     ]
     if work_after_gate.empty:
-        # LBT-In 감지 안 됨 또는 45분 초과 → LBT-Out만 반환 (부분값)
+        # LBT-In 감지 안 됨 → LBT-Out만으로 부분값 반환
         if lbt_out > 45 or lbt_out < 0:
             return None
-        return round(lbt_out, 1)
+        return {"total": round(lbt_out, 1), "out": round(lbt_out, 1), "in": None}
 
     first_work_return = work_after_gate["timestamp"].min()
     lbt_in = (first_work_return - last_gate_time).total_seconds() / 60
@@ -708,7 +709,11 @@ def _calc_lbt_for_worker(df: pd.DataFrame, cfg_values: dict) -> float | None:
     if lbt_total > 90 or lbt_total < 0:
         return None
 
-    return round(lbt_total, 1)
+    return {
+        "total": round(lbt_total, 1),
+        "out":   round(lbt_out, 1),
+        "in":    round(lbt_in, 1),
+    }
 
 
 def _calc_eod_for_worker(df: pd.DataFrame, cfg_values: dict) -> tuple[float | None, bool]:
@@ -802,7 +807,10 @@ def calc_worker_transit(
 
         # 각 지표 계산 (is_estimated 튜플 언팩)
         mat, mat_est = _calc_mat_for_worker(grp)
-        lbt = _calc_lbt_for_worker(grp, cfg_values)
+        lbt_result = _calc_lbt_for_worker(grp, cfg_values)
+        lbt     = lbt_result["total"] if lbt_result else None
+        lbt_out = lbt_result["out"]   if lbt_result else None
+        lbt_in  = lbt_result["in"]    if lbt_result else None
         lmt = _calc_lmt_for_worker(grp, cfg_values)
         eod, eod_est = _calc_eod_for_worker(grp, cfg_values)
 
@@ -833,7 +841,9 @@ def calc_worker_transit(
             "company_name": company_name,
             "mat_minutes": mat,
             "mat_is_estimated": mat_est,   # gap-filled 레코드 기반 추정 여부
-            "lbt_minutes": lbt,
+            "lbt_minutes":     lbt,
+            "lbt_out_minutes": lbt_out,    # LBT-Out 편도 (FAB → 타각기) — lbt_out + lbt_in = lbt_minutes
+            "lbt_in_minutes":  lbt_in,     # LBT-In  편도 (타각기 → FAB) — 동일 집단 기준
             "lmt_minutes": lmt,            # 점심식사 전체 시간 (이동 포함)
             "eod_minutes": eod,
             "eod_is_estimated": eod_est,   # gap-filled 레코드 기반 추정 여부
